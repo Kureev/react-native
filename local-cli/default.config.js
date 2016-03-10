@@ -1,7 +1,18 @@
+/**
+ * Copyright (c) 2015-present, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
 'use strict';
 
 var blacklist = require('../packager/blacklist');
 var path = require('path');
+var findAssets = require('./utils/findAssets');
+var ios = require('./ios');
+var android = require('./android');
 
 /**
  * Default configuration for the CLI.
@@ -30,8 +41,48 @@ var config = {
    */
   getBlacklistRE(platform) {
     return blacklist(platform);
+  },
+
+  /**
+   * Returns an rnpm config. If there is no config, returns an empty object
+   */
+  getRNPMConfig(folder) {
+    return getRNPMConfig(folder);
+  },
+
+  /**
+   * Returns project config from the current working directory
+   */
+  getProjectConfig() {
+    const projectDir = getRoots();
+    const cfg = getRNPMConfig(projectDir);
+
+    return Object.assign({}, cfg, {
+      ios: ios.projectConfig(projectDir, cfg.ios || {}),
+      android: android.projectConfig(projectDir, cfg.android || {}),
+      assets: findAssets(projectDir, cfg.assets)
+    });
+  },
+
+  /**
+   * Returns a dependency config from node_modules/<packageName>
+   */
+  getDependencyConfig(packageName) {
+    const dependencyDir = path.join(getRoots(), 'node_modules', packageName);
+    const cfg = getRNPMConfig(dependencyDir);
+
+    return Object.assign({}, cfg, {
+      ios: ios.dependencyConfig(dependencyDir, cfg.ios || {}),
+      android: android.dependencyConfig(dependencyDir, cfg.android || {}),
+      assets: findAssets(dependencyDir, cfg.assets)
+    });
   }
 };
+
+function getRNPMConfig(folder) {
+  const packageJSON = path.join(folder, 'package.json');
+  return require(packageJSON).rnpm || Object.create(null);
+}
 
 function getRoots() {
   if (__dirname.match(/node_modules[\/\\]react-native[\/\\]local-cli$/)) {
