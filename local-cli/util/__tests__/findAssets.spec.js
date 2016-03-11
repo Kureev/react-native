@@ -10,15 +10,18 @@
 
 jest.autoMockOff();
 
+jest.mock('fs');
+
+const fs = require('fs');
 const findAssets = require('../findAssets');
-const mockFs = require('mock-fs');
 const dependencies = require('./fixtures/dependencies');
 const isArray = (arg) =>
   Object.prototype.toString.call(arg) === '[object Array]';
 
 describe('findAssets', () => {
-
-  beforeAll(() => mockFs({ testDir: dependencies.withAssets }));
+  beforeEach(() =>
+    fs.__setMockFilesystem({'testDir': dependencies.withAssets})
+  );
 
   it('should return an array of all files in given folders', () => {
     const assets = findAssets('testDir', ['fonts', 'images']);
@@ -36,6 +39,4 @@ describe('findAssets', () => {
   it('should return an empty array if given assets are null', () => {
     expect(findAssets('testDir', null).length).toEqual(0);
   });
-
-  afterAll(mockFs.restore);
 });
