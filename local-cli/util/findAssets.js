@@ -20,11 +20,11 @@ const findAssetsInFolder = (folder) =>
  *
  * It returns an array of absolute paths to files found.
  */
-module.exports = function findAssets(folder, assets) {
-  const concatAssets = (files, assetsFolder) =>
-    files.concat(findAssetsInFolder(assetsFolder));
+module.exports = function findAssets(base, folders) {
+  const concatAssets = (files, folder) =>
+    files.concat(findAssetsInFolder(folder));
 
-  return (assets || [])
-    .map(assetsFolder => path.join(folder, assetsFolder))
+  return (folders || [])
+    .map(folder => path.join(base, folder))
     .reduce(concatAssets, []);
 };
